@@ -21,7 +21,6 @@ class Peer(object):
         self._buffer = ''
 
         self.worker = None
-        self.working = False
 
         self.try_connect()
 
@@ -41,7 +40,7 @@ class Peer(object):
         self.stream = stream
         self.do_handshake()
 
-        self.working = True
+        self.status = 1
         self.worker = spawn(self.recv_packet)
 
     def do_handshake(self):
@@ -66,7 +65,7 @@ class Peer(object):
 
     def recv_packet(self):
         'Receive packets, parse them, and send them off for interpretation'
-        while self.working:
+        while self.status:
             packets = self.decode_length(self.socket.recv(1024))
             if not packets:
                 self.quit()
@@ -120,9 +119,9 @@ class Peer(object):
         return packets
 
     def quit(self):
-        'Goodbye!'
+        'Goodbye for now!'
         if self.stream:
-            self.working = False
+            self.status = 0
             self.stream.shutdown()
             self.stream.close()
             join(self.worker)

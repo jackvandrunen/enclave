@@ -36,7 +36,7 @@ Data is sent between nodes over a TCP stream, which means that the data is not p
     | 4 byte length encoding | Content |
     +------------------------+---------+
 
-The 4 byte length encoding is simply a 32 bit integer. For example, if the size of "content" was 256, the length encoding (represented here in hex) would be:
+The 4 byte length encoding is simply a 32 bit integer in network (big) endian format. For example, if the size of "content" was 256, the length encoding (represented here in hex) would be:
 
     00 00 01 00
 
@@ -44,9 +44,11 @@ The 4 byte length encoding is simply a 32 bit integer. For example, if the size 
 
 #### **Protocol Specification**
 
-The "content" portion of an Enclave "packet" is just a JSON string. Because JSON is traditionally Unicode, it must be encoded as UTF-8 before being sent over the network.
+The "content" portion of an Enclave "packet" is just a JSON string. Because JSON can be traditionally Unicode, it must be encoded as UTF-8 before being sent over the network.
 
 These packets can have any number of different attributes. Some of the attributes are dependent on others, but some are independent.
+
+NOTE: This is a constantly evolving spec, so expect changes.
 
 ---
 
@@ -71,5 +73,11 @@ These packets can have any number of different attributes. Some of the attribute
 ---
 
 `timestamp` A UNIX timestamp formatted as an integer. Should be sent with every packet for reference, although it's up to the client to decide how to deal with it. Clients should also have the ability to deal with missing timestamp fields.
+
+---
+
+*Handshake*
+
+When two clients connect, they both should send a single packet. This packet should contain the client's "status" and "status-message".
 
 ---

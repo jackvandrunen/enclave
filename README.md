@@ -52,6 +52,10 @@ NOTE: This is a constantly evolving spec, so expect changes.
 
 ---
 
+`alias` This is a string that contains the preferred alias of a node (eg John Smith). This must be sent as part of the handshake and can be sent whenever the node changes its preferred alias. The receiving client might have set a different preferred alias for its peer, so it may disregard this entirely, if necessary.
+
+---
+
 `status` An integer sent to all peers when a node updates its status. It is up to the receiving node's front-end as to how this is displayed. The status codes are as follows:
 
 0: Offline. It is good manners for a node that is shutting down to send out this status update. If a node receives an update from its peer with a status update to 0, it should close the connection.
@@ -78,6 +82,6 @@ NOTE: This is a constantly evolving spec, so expect changes.
 
 *Handshake*
 
-When two clients connect, they both should send a single packet. This packet should contain the client's "status" and "status-message".
+When two clients connect, they both should send a single packet. This packet should contain the client's "alias", "status", and "status-message".
 
 ---

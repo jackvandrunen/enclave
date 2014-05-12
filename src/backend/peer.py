@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gevent import socket, spawn, join
+from gevent import socket, spawn
 
 import json
 import time
@@ -37,6 +37,9 @@ class Peer(object):
 
     def recv_connect(self, stream):
         'A connection has been established'
+        if self.stream is not None:
+            self.quit()
+
         self.stream = stream
         self.do_handshake()
 
@@ -46,6 +49,7 @@ class Peer(object):
     def do_handshake(self):
         'Sends a handshake packet'
         data = {
+            'name': self.master.node.name,
             'status': self.master.node.status,
             'status-message': self.master.node.status_message
         }
@@ -66,7 +70,11 @@ class Peer(object):
     def recv_packet(self):
         'Receive packets, parse them, and send them off for interpretation'
         while self.status:
-            packets = self.decode_length(self.socket.recv(1024))
+            try:
+                packets = self.decode_length(self.socket.recv(1024))
+            except Exception:
+                packets = []
+
             if not packets:
                 self.quit()
                 return
@@ -76,7 +84,7 @@ class Peer(object):
                     data = json.loads(raw)
                     self.parse_packet(data)
 
-                except:
+                except Exception:
                     continue
 
     def parse_packet(self, data):
@@ -124,5 +132,5 @@ class Peer(object):
             self.status = 0
             self.stream.shutdown()
             self.stream.close()
-            join(self.worker)
+            self.worker.join()
             self.stream = None

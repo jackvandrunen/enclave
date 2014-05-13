@@ -130,7 +130,7 @@ class Peer(object):
         'Goodbye for now!'
         if self.stream:
             self.status = 0
-            self.stream.shutdown()
+            self.stream.shutdown(socket.SHUT_RDWR)
             self.stream.close()
             self.worker.join()
             self.stream = None

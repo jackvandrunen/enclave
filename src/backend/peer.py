@@ -49,9 +49,9 @@ class Peer(object):
     def do_handshake(self):
         'Sends a handshake packet'
         data = {
-            'name': self.master.node.name,
-            'status': self.master.node.status,
-            'status-message': self.master.node.status_message
+            'name': self.master.node['name'],
+            'status': self.master.node['status'],
+            'status-message': self.master.node['status-message']
         }
 
         self.send_packet(data)
@@ -71,7 +71,7 @@ class Peer(object):
         'Receive packets, parse them, and send them off for interpretation'
         while self.status:
             try:
-                packets = self.decode_length(self.socket.recv(1024))
+                packets = self.decode_length(self.socket.recv(4096))
             except Exception:
                 packets = []
 

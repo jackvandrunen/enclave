@@ -10,7 +10,19 @@ import struct
 class Peer(object):
     'Manages a connection with another friendly node'
 
-    def __init__(self, master, addr, name):
+    @classmethod
+    def from_socket(cls, master, addr, sock):
+        o = cls(master, addr)
+        o.recv_connect(sock)
+        return o
+
+    @classmethod
+    def from_addr(cls, master, addr, name):
+        o = cls(master, addr, name)
+        o.try_connect()
+        return o
+
+    def __init__(self, master, addr, name=''):
         self.master = master
         self.name = name
         self.addr = addr
@@ -19,10 +31,7 @@ class Peer(object):
         self.stream = None
         self.log = []
         self._buffer = ''
-
         self.worker = None
-
-        self.try_connect()
 
     def try_connect(self):
         'Try to establish a connection with the other node'
@@ -49,7 +58,7 @@ class Peer(object):
     def do_handshake(self):
         'Sends a handshake packet'
         data = {
-            'name': self.master.node['name'],
+            'alias': self.master.node['alias'],
             'status': self.master.node['status'],
             'status-message': self.master.node['status-message']
         }
@@ -91,6 +100,10 @@ class Peer(object):
         'Parse the contents of a packet'
         if not data.get('timestamp'):
             data['timestamp'] = int(time.time())
+
+        alias = data.get('alias')
+        if alias is not None and not self.name:
+            self.name = alias
 
         status = data.get('status')
         if status is not None and status == 0:
@@ -134,3 +147,7 @@ class Peer(object):
             self.stream.close()
             self.worker.join()
             self.stream = None
+
+    def send_message(self, message):
+        self.send_packet({'message': message})
+        self.log.append((time.time(), self.master.node['alias'], message))

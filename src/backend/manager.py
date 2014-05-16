@@ -16,7 +16,7 @@ class Manager(threading.Thread):
         super(Manager, self).__init__()
 
         self.friends = friends
-        self.enemies = enemies
+        self.enemies = set(enemies)
 
         self.address = self.get_address()
         self.server = Server(self)

@@ -6,6 +6,9 @@ Add(self, item, tuple pos, tuple span=wx.DefaultSpan, integer flag=0,
 
 import wx
 
+import sys
+import backend
+
 
 class Main(wx.Frame):
     'The application window'
@@ -17,39 +20,54 @@ class Main(wx.Frame):
         self.init_ui()
         self.Show()
 
+        self.init_backend()
+
     def init_ui(self):
         'Deals with setting up the GUI'
-        panel = wx.Panel(self)
+        self.panel = wx.Panel(self)
 
-        grid = wx.GridBagSizer(5, 10)
+        self.grid = wx.GridBagSizer(5, 10)
 
-        friendlist = wx.ListBox(panel)
-        grid.Add(friendlist, (0, 0), span=(6, 2), flag=wx.EXPAND)
+        self.friendlist = wx.ListBox(self.panel)
+        self.grid.Add(self.friendlist, (0, 0), span=(6, 2), flag=wx.EXPAND)
 
-        button_ignore = wx.Button(panel, label="Ignore", size=(90, 28))
-        button_add = wx.Button(panel, label="Add", size=(90, 28))
-        grid.Add(button_ignore, pos=(6, 0), flag=wx.BOTTOM)
-        grid.Add(button_add, pos=(6, 1))
+        self.button_ignore = wx.Button(self.panel, label="Ignore", size=(90, 28))
+        self.button_add = wx.Button(self.panel, label="Add", size=(90, 28))
+        self.grid.Add(self.button_ignore, pos=(6, 0), flag=wx.BOTTOM)
+        self.grid.Add(self.button_add, pos=(6, 1))
 
-        message = wx.TextCtrl(panel)
-        grid.Add(message, pos=(6, 2), span=(1, 4), flag=wx.EXPAND | wx.RIGHT)
+        self.message = wx.TextCtrl(self.panel)
+        self.grid.Add(self.message, pos=(6, 2), span=(1, 4), flag=wx.EXPAND | wx.RIGHT)
 
-        log = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
-        grid.Add(log, pos=(2, 2), span=(4, 4), flag=wx.EXPAND)
+        self.log = wx.TextCtrl(self.panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.grid.Add(self.log, pos=(2, 2), span=(4, 4), flag=wx.EXPAND)
 
-        ipshow = wx.TextCtrl(panel, value='ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', style=wx.TE_READONLY)
-        grid.Add(ipshow, pos=(0, 2), span=(1, 4), flag=wx.EXPAND)
+        self.ipshow = wx.TextCtrl(self.panel, value='ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', style=wx.TE_READONLY)
+        self.grid.Add(self.ipshow, pos=(0, 2), span=(1, 4), flag=wx.EXPAND)
 
-        statusmenu = wx.ComboBox(panel, choices=['Available'], style=wx.CB_READONLY)
-        grid.Add(statusmenu, pos=(1, 2), span=(1, 1))
+        self.statusmenu = wx.ComboBox(self.panel, choices=['Available'], style=wx.CB_READONLY)
+        self.grid.Add(self.statusmenu, pos=(1, 2), span=(1, 1))
 
-        statusmsg = wx.TextCtrl(panel)
-        grid.Add(statusmsg, pos=(1, 3), span=(1, 3), flag=wx.EXPAND)
+        self.statusmsg = wx.TextCtrl(self.panel)
+        self.grid.Add(self.statusmsg, pos=(1, 3), span=(1, 3), flag=wx.EXPAND)
 
-        grid.AddGrowableRow(2)
-        grid.AddGrowableCol(3)
+        self.grid.AddGrowableRow(2)
+        self.grid.AddGrowableCol(3)
 
-        panel.SetSizerAndFit(grid)
+        self.panel.SetSizerAndFit(self.grid)
+
+    def init_backend(self):
+        try:
+            address = backend.get_address()
+            if address is None:
+                raise Exception
+
+        except Exception:
+            wx.MessageBox('No cjdns interface detected!', 'Error',
+                          wx.OK | wx.ICON_ERROR)
+            sys.exit(1)
+
+        self.ipshow.ChangeValue(address)
 
     def call_api(self, event):
         'An idle event handler, handles calls to the backend'

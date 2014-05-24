@@ -13,6 +13,9 @@ from manager import Manager
 manager = None
 
 
+get_address = Manager.get_address
+
+
 def start(friends, enemies, alias, status, statusmsg):
     'Set up the manager and start the backend thread'
     global manager

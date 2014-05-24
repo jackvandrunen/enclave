@@ -30,6 +30,7 @@ class Manager(threading.Thread):
         self.server.start()
         gevent.wait()
 
+    @staticmethod
     def get_address():
         'Returns the address that we care about, or None'
         ifaces = [i for i in netifaces.interfaces() if i.startswith('tun')]

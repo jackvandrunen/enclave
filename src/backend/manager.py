@@ -22,6 +22,7 @@ class Manager(threading.Thread):
         self.server = Server(self)
 
         self.node = {}
+        self.peers = {}
         self.update_node(alias, status, statusmsg)
 
     def run(self):
@@ -51,6 +52,8 @@ class Manager(threading.Thread):
 
         if statusmsg is not None:
             self.node['status-message'] = statusmsg
+
+        self.update_information(**self.node)
 
     def try_peers(self):
         'Attempt to connect to all friends'

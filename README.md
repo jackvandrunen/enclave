@@ -50,18 +50,6 @@ NOTE: This is a constantly evolving spec, so expect changes.
 
 ---
 
-`type` This specifies the type of message the packet contains. At this point, the type is meaningless, but in the future, if the spec increases to handle group chats, voice chats, file transfers, etc, then it will be useful to distinguish the different types of messages and, if necessary, provide QoS and priority.
-
-0: Text message. This is the default if the packet does not contain a type attribute.
-
-More may be added in the future.
-
----
-
-### **Text Message Attributes**
-
----
-
 `alias` This is a string that contains the preferred alias of a node (eg John Smith). This must be sent as part of the handshake and can be sent whenever the node changes its preferred alias. The receiving client might have set a different preferred alias for its peer, so it may disregard this entirely, if necessary.
 
 ---

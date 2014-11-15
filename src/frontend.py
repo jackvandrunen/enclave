@@ -46,9 +46,11 @@ class Main(wx.Frame):
         self.grid.Add(self.message, pos=(6, 2), span=(1, 4),
             flag=wx.EXPAND | wx.RIGHT)
 
-        self.setalias = wx.TextCtrl(self.panel, value="Anon")
+        self.setalias = wx.TextCtrl(self.panel, value="Anon",
+            style=wx.TE_PROCESS_ENTER)
         self.grid.Add(self.setalias, pos=(0, 2), span=(1, 4),
             flag=wx.EXPAND)
+        self.setalias.Bind(wx.EVT_TEXT_ENTER, self.update_alias)
 
         self.log = wx.TextCtrl(self.panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY)
@@ -59,8 +61,9 @@ class Main(wx.Frame):
         self.grid.Add(self.statusmenu, pos=(1, 2), span=(1, 1))
         self.statusmenu.Bind(wx.EVT_COMBOBOX, self.update_status)
 
-        self.statusmsg = wx.TextCtrl(self.panel)
+        self.statusmsg = wx.TextCtrl(self.panel, style=wx.TE_PROCESS_ENTER)
         self.grid.Add(self.statusmsg, pos=(1, 3), span=(1, 3), flag=wx.EXPAND)
+        self.statusmsg.Bind(wx.EVT_TEXT_ENTER, self.update_statusmsg)
 
         self.grid.AddGrowableRow(2)
         self.grid.AddGrowableCol(3)
@@ -82,12 +85,31 @@ class Main(wx.Frame):
 
         backend.start()
 
+        node = backend.get_node()
+        self.setalias.SetValue(node['alias'])
+        self.statusmsg.SetValue(node['status-message'])
+        self.statusmenu.SetValue('Available')
+
     def call_api(self, event):
         'An idle event handler, handles calls to the backend'
 
     def update_status(self, event):
         status = self.statusmenu.GetValue()
         backend.update_info(status=status)
+
+    def update_alias(self, event):
+        alias = self.setalias.GetValue()
+        if len(alias):
+            backend.update_info(alias=alias)
+        else:
+            self.setalias.SetValue(backend.get_node()['alias'])
+
+    def update_statusmsg(self, event):
+        statusmsg = self.statusmsg.GetValue()
+        if len(statusmsg):
+            backend.update_info(statusmsg=statusmsg)
+        else:
+            self.statusmsg.SetValue(backend.get_node()['status-message'])
 
 
 if __name__ == '__main__':

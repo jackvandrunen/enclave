@@ -74,6 +74,10 @@ def get_info(addr):
     }
 
 
+def get_node():
+    return manager.node
+
+
 def update_info(alias=None, status=None, statusmsg=None):
     'Update global information (eg alias, status, status message)'
     info = {}

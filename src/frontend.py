@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Add(self, item, tuple pos, tuple span=wx.DefaultSpan, integer flag=0, 
+Add(self, item, tuple pos, tuple span=wx.DefaultSpan, integer flag=0,
     integer border=0, userData=None)
 '''
 
@@ -28,24 +28,34 @@ class Main(wx.Frame):
 
         self.grid = wx.GridBagSizer(5, 10)
 
-        self.friendlist = wx.ListBox(self.panel)
-        self.grid.Add(self.friendlist, (0, 0), span=(6, 2), flag=wx.EXPAND)
+        self.ipshow = wx.TextCtrl(self.panel,
+            value='ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff',
+            style=wx.TE_READONLY)
+        self.grid.Add(self.ipshow, pos=(0, 0), span=(1, 2), flag=wx.EXPAND)
 
-        self.button_ignore = wx.Button(self.panel, label="Ignore", size=(90, 28))
+        self.friendlist = wx.ListBox(self.panel)
+        self.grid.Add(self.friendlist, (1, 0), span=(5, 2), flag=wx.EXPAND)
+
+        self.button_ignore = wx.Button(self.panel,
+            label="Ignore", size=(90, 28))
         self.button_add = wx.Button(self.panel, label="Add", size=(90, 28))
         self.grid.Add(self.button_ignore, pos=(6, 0), flag=wx.BOTTOM)
         self.grid.Add(self.button_add, pos=(6, 1))
 
         self.message = wx.TextCtrl(self.panel)
-        self.grid.Add(self.message, pos=(6, 2), span=(1, 4), flag=wx.EXPAND | wx.RIGHT)
+        self.grid.Add(self.message, pos=(6, 2), span=(1, 4),
+            flag=wx.EXPAND | wx.RIGHT)
 
-        self.log = wx.TextCtrl(self.panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.setalias = wx.TextCtrl(self.panel, value="Anon")
+        self.grid.Add(self.setalias, pos=(0, 2), span=(1, 4),
+            flag=wx.EXPAND)
+
+        self.log = wx.TextCtrl(self.panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY)
         self.grid.Add(self.log, pos=(2, 2), span=(4, 4), flag=wx.EXPAND)
 
-        self.ipshow = wx.TextCtrl(self.panel, value='ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff', style=wx.TE_READONLY)
-        self.grid.Add(self.ipshow, pos=(0, 2), span=(1, 4), flag=wx.EXPAND)
-
-        self.statusmenu = wx.ComboBox(self.panel, choices=['Available'], style=wx.CB_READONLY)
+        self.statusmenu = wx.ComboBox(self.panel, choices=['Available'],
+            style=wx.CB_READONLY)
         self.grid.Add(self.statusmenu, pos=(1, 2), span=(1, 1))
 
         self.statusmsg = wx.TextCtrl(self.panel)

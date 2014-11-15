@@ -54,9 +54,10 @@ class Main(wx.Frame):
             style=wx.TE_MULTILINE | wx.TE_READONLY)
         self.grid.Add(self.log, pos=(2, 2), span=(4, 4), flag=wx.EXPAND)
 
-        self.statusmenu = wx.ComboBox(self.panel, choices=['Available'],
-            style=wx.CB_READONLY)
+        self.statusmenu = wx.ComboBox(self.panel,
+            choices=['Available', 'Away', 'Busy'], style=wx.CB_READONLY)
         self.grid.Add(self.statusmenu, pos=(1, 2), span=(1, 1))
+        self.statusmenu.Bind(wx.EVT_COMBOBOX, self.update_status)
 
         self.statusmsg = wx.TextCtrl(self.panel)
         self.grid.Add(self.statusmsg, pos=(1, 3), span=(1, 3), flag=wx.EXPAND)
@@ -81,6 +82,10 @@ class Main(wx.Frame):
 
     def call_api(self, event):
         'An idle event handler, handles calls to the backend'
+
+    def update_status(self, event):
+        status = self.statusmenu.GetValue()
+        backend.update_info(status=status)
 
 
 if __name__ == '__main__':

@@ -46,6 +46,8 @@ def update_info(alias=None, status=None, statusmsg=None):
     if statusmsg is not None:
         info['statusmsg'] = statusmsg
 
+    manager.update_node(**info)
+
 
 def send_message(addr, message):
     'Send a message to a peer'

@@ -12,6 +12,9 @@ from server import Server
 class Manager(threading.Thread):
     'Manages everything in the backend'
 
+    status_messages = {'available': 1, 'online': 1, 'idle': 2, 'away': 2,
+                       'busy': 3}
+
     def __init__(self, friends, enemies, alias, status=1, statusmsg=''):
         super(Manager, self).__init__()
 
@@ -48,7 +51,11 @@ class Manager(threading.Thread):
             self.node['alias'] = alias
 
         if status is not None:
-            self.node['status'] = status
+            if type(status) is int:
+                self.node['status'] = status
+
+            elif type(status) is str:
+                self.node['status'] = self.status_messages[status.lower()]
 
         if statusmsg is not None:
             self.node['status-message'] = statusmsg

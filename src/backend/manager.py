@@ -81,3 +81,6 @@ class Manager(threading.Thread):
     def update_information(self, **kwargs):
         for peer in self.peers.values():
             peer.send_packet(kwargs)
+
+    def quit(self):
+        self.update_node(status=0)

@@ -106,3 +106,7 @@ def ignore(addr):
     if node is not None:
         node.quit()
         del manager.peers[addr]
+
+
+def quit():
+    manager.quit()

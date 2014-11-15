@@ -80,6 +80,8 @@ class Main(wx.Frame):
 
         self.ipshow.ChangeValue(address)
 
+        backend.start()
+
     def call_api(self, event):
         'An idle event handler, handles calls to the backend'
 

@@ -7,6 +7,9 @@ NOTE: The frontend needs to handle saving and loading the friend and enemy
 (ignore) list, as well as all the user's information.
 '''
 
+import os
+import json
+
 from manager import Manager
 
 
@@ -16,10 +19,34 @@ manager = None
 get_address = Manager.get_address
 
 
-def start(friends, enemies, alias, status, statusmsg):
+def load_config(path=None):
+    'Load the configuration file to feed to the manager'
+    if path is None:
+        path = os.path.join(os.path.expanduser('~'), '.enclave')
+        try:
+            os.mkdir(path)
+        except OSError:
+            pass
+        path = os.path.join(path, 'config.json')
+
+    try:
+        with open(path, 'r') as f:
+            config = json.load(f)
+        return config
+
+    except Exception:
+        config = {'friends': [], 'enemies': [], 'alias': 'Anon',
+                  'statusmsg': ''}
+        with open(path, 'w') as f:
+            json.dump(config, f)
+        return config
+
+
+def start():
     'Set up the manager and start the backend thread'
     global manager
-    manager = Manager(friends, enemies, alias, statusmsg)
+    config = load_config()
+    manager = Manager(**config)
     manager.start()
 
 

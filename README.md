@@ -60,9 +60,9 @@ NOTE: This is a constantly evolving spec, so expect changes.
 
 1: Available. The human at the other end of the node is at the computer and is willing to chat.
 
-2: Idle/Away. The human is not at the computer right now. An away status update should probably be accompanied by a `status-message` (described below) to indicate reasons and estimated time of return, but that is a human issue, not a protocol one.
+2: Idle/Away. The human is not at the computer right now.
 
-3: Busy. The human does not wish to be disturbed and should not be expected to answer a message. A `status-message` should accompany this as well.
+3: Busy. The human does not wish to be disturbed and should not be expected to answer a message.
 
 ---
 
@@ -70,7 +70,7 @@ NOTE: This is a constantly evolving spec, so expect changes.
 
 ---
 
-`message` A string containing a message.
+`message` A string containing a text message.
 
 ---
 

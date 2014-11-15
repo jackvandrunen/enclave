@@ -37,9 +37,22 @@ def load_config(path=None):
     except Exception:
         config = {'friends': [], 'enemies': [], 'alias': 'Anon',
                   'statusmsg': ''}
-        with open(path, 'w') as f:
-            json.dump(config, f)
+        save_config(config, path)
         return config
+
+
+def save_config(config=None, path=None):
+    if config is None:
+        config = {'friends': list(manager.friends),
+                  'enemies': list(manager.enemies),
+                  'alias': manager.node['alias'],
+                  'statusmsg': manager.node['status-message']}
+
+    if path is None:
+        path = os.path.join(os.path.expanduser('~'), '.enclave', 'config.json')
+
+    with open(path, 'w') as f:
+        json.dump(config, f)
 
 
 def start():

@@ -44,11 +44,21 @@ The 4 byte length encoding is simply a 32 bit integer in network (big) endian fo
 
 #### **Protocol Specification**
 
-The "content" portion of an Enclave "packet" is just a JSON string. Because JSON can be traditionally Unicode, it must be encoded as UTF-8 before being sent over the network.
-
-These packets can have any number of different attributes. Some of the attributes are dependent on others, but some are independent.
+The "content" portion of an Enclave "packet" is just a JSON string. These packets can have any number of different attributes. Some of the attributes are dependent on others, but some are independent.
 
 NOTE: This is a constantly evolving spec, so expect changes.
+
+---
+
+`type` This specifies the type of message the packet contains. At this point, the type is meaningless, but in the future, if the spec increases to handle group chats, voice chats, file transfers, etc, then it will be useful to distinguish the different types of messages and, if necessary, provide QoS and priority.
+
+0: Text message. This is the default if the packet does not contain a type attribute.
+
+More may be added in the future.
+
+---
+
+### **Text Message Attributes**
 
 ---
 

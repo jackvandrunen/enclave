@@ -54,8 +54,11 @@ class Manager(threading.Thread):
             if type(status) is int:
                 self.node['status'] = status
 
-            elif type(status) is str:
-                self.node['status'] = self.status_messages[status.lower()]
+            else:
+                try:
+                    self.node['status'] = self.status_messages[status.lower()]
+                except Exception:
+                    pass
 
         if statusmsg is not None:
             self.node['status-message'] = statusmsg

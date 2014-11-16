@@ -30,8 +30,8 @@ class Manager(threading.Thread):
 
     def run(self):
         'Called when the thread is started'
-        self.try_peers()
         self.server.start()
+        self.try_peers()
         gevent.wait()
 
     @staticmethod
@@ -84,8 +84,11 @@ class Manager(threading.Thread):
 
         if addr not in self.friends:
             self.friends[addr] = name
-            self.peers[addr] = Peer.from_addr(self, addr, name)
-            print 'added'
+
+            if addr not in self.peers:
+                self.peers[addr] = Peer.from_addr(self, addr, name)
+
+        return (name, self.peers[addr])
 
     def update_information(self, **kwargs):
         for peer in self.peers.values():

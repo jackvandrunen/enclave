@@ -74,7 +74,21 @@ def get_info(addr):
     }
 
 
+def get_friends():
+    'Get a list of (name, peer object) pairs'
+    friends = []
+    for addr, peer in manager.peers.items():
+        if addr in manager.friends:
+            name = manager.friends[addr]
+        else:
+            name = addr
+        friends.append((name, peer))
+
+    return friends
+
+
 def get_node():
+    'Get information about yourself'
     return manager.node
 
 
@@ -110,7 +124,7 @@ def ignore(addr):
 
 def add(addr, name):
     'Add a new friend based on cjdns address'
-    manager.add_friend(addr, name)
+    return manager.add_friend(addr, name)
 
 
 def quit():

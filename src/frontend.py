@@ -13,6 +13,9 @@ import backend
 class Main(wx.Frame):
     'The application window'
 
+    status = {0: '[X]', 1: '', 2: '[-]', 3: '[!]'}
+    newmsg = '*'
+
     def __init__(self):
         super(Main, self).__init__(None, -1, title="Enclave", size=(600, 500))
         self.Bind(wx.EVT_IDLE, self.call_api)
@@ -92,8 +95,28 @@ class Main(wx.Frame):
         self.statusmsg.SetValue(node['status-message'])
         self.statusmenu.SetValue('Available')
 
+        try:
+            (self.friends_by_name,
+                self.friends_by_obj) = zip(*backend.get_friends())
+            self.friendlist.Set(self.friends_by_name)
+        except ValueError:
+            self.friends_by_name = []
+            self.friends_by_obj = []
+
     def call_api(self, event):
         'An idle event handler, handles calls to the backend'
+        friends = backend.get_friends()
+        if len(friends) > len(self.friends_by_name):
+            for name, peer in friends:
+                if peer not in self.friends_by_obj:
+                    self.friends_by_name.append(name)
+                    self.friends_by_obj.append(peer)
+                    self.friendlist.Insert(name, len(self.friends_by_name) - 1)
+
+        for index, name in enumerate(self.friends_by_name):
+            status = self.friends_by_obj[index].status
+            display = '{0}{1}'.format(self.status[status], name)
+            self.friendlist.SetString(index, display)
 
     def update_status(self, event):
         status = self.statusmenu.GetValue()
@@ -131,7 +154,16 @@ class Main(wx.Frame):
                     "Enter friend's cjdns address...", caption='Add Friend...')
                 address_prompt.ShowModal()
                 address = address_prompt.GetValue()
-                backend.add(address, name)
+
+                name, peer = backend.add(address, name)
+                if peer in self.friends_by_obj:
+                    index = self.friends_by_obj.index(peer)
+                    self.friends_by_name[index] = name
+
+                else:
+                    self.friends_by_name.append(name)
+                    self.friends_by_obj.append(peer)
+                    self.friendlist.Insert(name, len(self.friends_by_name) - 1)
 
 
 if __name__ == '__main__':

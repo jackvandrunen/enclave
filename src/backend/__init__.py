@@ -35,7 +35,7 @@ def load_config(path=None):
         return config
 
     except Exception:
-        config = {'friends': [], 'enemies': [], 'alias': 'Anon',
+        config = {'friends': {}, 'enemies': [], 'alias': 'Anon',
                   'statusmsg': ''}
         save_config(config, path)
         return config
@@ -43,7 +43,7 @@ def load_config(path=None):
 
 def save_config(config=None, path=None):
     if config is None:
-        config = {'friends': list(manager.friends),
+        config = {'friends': manager.friends,
                   'enemies': list(manager.enemies),
                   'alias': manager.node['alias'],
                   'statusmsg': manager.node['status-message']}
@@ -106,6 +106,11 @@ def ignore(addr):
     if node is not None:
         node.quit()
         del manager.peers[addr]
+
+
+def add(addr, name):
+    'Add a new friend based on cjdns address'
+    manager.add_friend(addr, name)
 
 
 def quit():

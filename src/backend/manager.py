@@ -65,7 +65,7 @@ class Manager(threading.Thread):
     def try_peers(self):
         'Attempt to connect to all friends'
         self.peers = {}
-        for addr, name in self.friends:
+        for addr, name in self.friends.items():
             self.peers[addr] = Peer.from_addr(self, addr, name)
 
     def new_connection(self, addr, sock):
@@ -77,6 +77,15 @@ class Manager(threading.Thread):
 
         else:
             self.peers[addr] = Peer.from_socket(self, addr, sock)
+
+    def add_friend(self, addr, name):
+        if addr in self.enemies:
+            self.enemies.remove(addr)
+
+        if addr not in self.friends:
+            self.friends[addr] = name
+            self.peers[addr] = Peer.from_addr(self, addr, name)
+            print 'added'
 
     def update_information(self, **kwargs):
         for peer in self.peers.values():

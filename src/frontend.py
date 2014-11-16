@@ -37,10 +37,12 @@ class Main(wx.Frame):
         self.grid.Add(self.friendlist, (1, 0), span=(5, 2), flag=wx.EXPAND)
 
         self.button_ignore = wx.Button(self.panel,
-            label="Ignore", size=(90, 28))
+            label="Remove", size=(90, 28))
         self.button_add = wx.Button(self.panel, label="Add", size=(90, 28))
-        self.grid.Add(self.button_ignore, pos=(6, 0), flag=wx.BOTTOM)
-        self.grid.Add(self.button_add, pos=(6, 1))
+        self.grid.Add(self.button_ignore, pos=(6, 1), flag=wx.BOTTOM)
+        self.grid.Add(self.button_add, pos=(6, 0))
+        self.button_ignore.Bind(wx.EVT_BUTTON, self.ignore_selected)
+        self.button_add.Bind(wx.EVT_BUTTON, self.add_new)
 
         self.message = wx.TextCtrl(self.panel)
         self.grid.Add(self.message, pos=(6, 2), span=(1, 4),
@@ -110,6 +112,26 @@ class Main(wx.Frame):
             backend.update_info(statusmsg=statusmsg)
         else:
             self.statusmsg.SetValue(backend.get_node()['status-message'])
+
+    def ignore_selected(self, event):
+        pass
+
+    def add_new(self, event):
+        which_function = wx.SingleChoiceDialog(self, 'What do you want to add?',
+            'Add...', choices=['Friend', 'Group Chat'])
+        which_function.ShowModal()
+
+        if which_function.GetStringSelection() == 'Friend':
+            name_prompt = wx.TextEntryDialog(self, "Enter friend's name...",
+                caption='Add Friend...')
+            name_prompt.ShowModal()
+            name = name_prompt.GetValue()
+            if name:
+                address_prompt = wx.TextEntryDialog(self,
+                    "Enter friend's cjdns address...", caption='Add Friend...')
+                address_prompt.ShowModal()
+                address = address_prompt.GetValue()
+                backend.add(address, name)
 
 
 if __name__ == '__main__':

@@ -75,6 +75,7 @@ class Peer(object):
         packed = self.encode_length(json.dumps(data, separators=(',', ':')))
 
         self.stream.send(packed)
+        print 'sent: %s' % packed
 
     def recv_packet(self):
         'Receive packets, parse them, and send them off for interpretation'
@@ -91,6 +92,7 @@ class Peer(object):
             for raw in packets:
                 try:
                     data = json.loads(raw)
+                    print 'received: %s' % str(data)
                     self.parse_packet(data)
 
                 except Exception:

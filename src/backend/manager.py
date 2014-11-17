@@ -72,6 +72,7 @@ class Manager(threading.Thread):
             self.peers[addr] = Peer.from_addr(self, addr, name)
 
     def new_connection(self, addr, sock):
+        print 'connection from %s' % addr
         if addr in self.enemies:
             return
 

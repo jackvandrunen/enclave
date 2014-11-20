@@ -16,5 +16,5 @@ class Server(object):
         self.server.stop()
 
     def handle(self, sock, full):
-        addr, port = full
+        addr, port = full[:2]
         self.master.new_connection(addr, sock)

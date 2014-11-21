@@ -46,14 +46,18 @@ class Peer(object):
 
     def recv_connect(self, stream):
         'A connection has been established'
+        print 'recv_connect called'
         if self.stream is not None:
             self.quit()
+        print 'working...'
 
         self.stream = stream
         self.do_handshake()
+        print 'still working...'
 
         self.status = 1
         self.worker = spawn(self.recv_packet)
+        print 'yup'
 
     def do_handshake(self):
         'Sends a handshake packet'
@@ -79,15 +83,21 @@ class Peer(object):
 
     def recv_packet(self):
         'Receive packets, parse them, and send them off for interpretation'
+        print 'recv_packet called'
         while self.status:
             try:
-                packets = self.decode_length(self.socket.recv(4096))
+                print 'waiting to receive packets!'
+                packets = self.decode_length(self.stream.recv(4096))
+                print 'received: %s' % repr(packets)
             except Exception:
                 packets = []
 
             if not packets:
+                print 'NO PACKETS!'
                 self.quit()
                 return
+
+            print 'received valid packets!'
 
             for raw in packets:
                 try:
@@ -143,6 +153,7 @@ class Peer(object):
 
     def quit(self):
         'Goodbye for now!'
+        print 'quit called!'
         if self.stream:
             self.status = 0
             self.stream.shutdown(socket.SHUT_RDWR)

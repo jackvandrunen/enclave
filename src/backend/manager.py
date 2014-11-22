@@ -3,8 +3,6 @@
 import netifaces
 import threading
 
-import gevent
-
 from peer import Peer
 from server import Server
 
@@ -30,9 +28,8 @@ class Manager(threading.Thread):
 
     def run(self):
         'Called when the thread is started'
-        self.server.start()
         self.try_peers()
-        gevent.wait()
+        self.server.start()
 
     @staticmethod
     def get_address():
@@ -92,7 +89,7 @@ class Manager(threading.Thread):
             if addr not in self.peers:
                 self.peers[addr] = Peer.from_addr(self, addr, name)
 
-        return (name, self.peers[addr])
+        return name, self.peers[addr]
 
     def update_information(self, **kwargs):
         for peer in self.peers.values():

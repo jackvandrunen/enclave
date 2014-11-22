@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gevent import socket, spawn
-
+import socket
 import json
 import time
 import struct
@@ -56,7 +55,7 @@ class Peer(object):
         print 'still working...'
 
         self.status = 1
-        self.worker = spawn(self.recv_packet)
+        self.recv_packet()
         print 'yup'
 
     def do_handshake(self):

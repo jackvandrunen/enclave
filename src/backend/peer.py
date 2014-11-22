@@ -4,9 +4,10 @@ import socket
 import json
 import time
 import struct
+import threading
 
 
-class Peer(object):
+class Peer(threading.Thread):
     'Manages a connection with another friendly node'
 
     @classmethod
@@ -22,6 +23,7 @@ class Peer(object):
         return o
 
     def __init__(self, master, addr, name=''):
+        super(Peer, self).__init__()
         self.master = master
         self.name = name
         self.addr = addr
@@ -55,7 +57,7 @@ class Peer(object):
         print 'still working...'
 
         self.status = 1
-        self.recv_packet()
+        self.start()
         print 'yup'
 
     def do_handshake(self):
@@ -80,7 +82,7 @@ class Peer(object):
         self.stream.send(packed)
         print 'sent: %s' % packed
 
-    def recv_packet(self):
+    def run(self):
         'Receive packets, parse them, and send them off for interpretation'
         print 'recv_packet called'
         while self.status:
@@ -88,7 +90,8 @@ class Peer(object):
                 print 'waiting to receive packets!'
                 packets = self.decode_length(self.stream.recv(4096))
                 print 'received: %s' % repr(packets)
-            except Exception:
+            except Exception, e:
+                print e
                 packets = []
 
             if not packets:

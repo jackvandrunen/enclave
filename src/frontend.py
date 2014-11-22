@@ -111,7 +111,7 @@ class Main(wx.Frame):
                 if peer not in self.friends_by_obj:
                     self.friends_by_name.append(name)
                     self.friends_by_obj.append(peer)
-                    self.friendlist.Insert(name, len(self.friends_by_name) - 1)
+                    self.friendlist.Insert(str(name), len(self.friends_by_name) - 1)
 
         for index, name in enumerate(self.friends_by_name):
             status = self.friends_by_obj[index].status

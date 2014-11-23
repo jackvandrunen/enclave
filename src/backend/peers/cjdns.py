@@ -1,41 +1,40 @@
-# -*- coding: utf-8 -*-
-
-import socket
 import json
+import socket
+import threading
 import time
 import struct
-import threading
 
 
 class Peer(threading.Thread):
-    'Manages a connection with another friendly node'
+    """Manages a connection with another node"""
 
     @classmethod
-    def from_socket(cls, master, addr, sock):
+    def from_socket(cls, master, addr, stream, log=[]):
         o = cls(master, addr)
-        o.recv_connect(sock)
+        o.recv_connect(stream)
         return o
 
     @classmethod
-    def from_addr(cls, master, addr, name):
-        o = cls(master, addr, name)
+    def from_addr(cls, master, addr, log=[]):
+        o = cls(master, addr)
         o.try_connect()
         return o
 
-    def __init__(self, master, addr, name=''):
+    def __init__(self, master, addr, log=[]):
         super(Peer, self).__init__()
+
         self.master = master
-        self.name = name
         self.addr = addr
+        self.alias = addr
         self.status = 0
-        self.status_message = ''
+        self.statusmsg = ''
+
         self.stream = None
-        self.log = []
+        self.log = log
         self._buffer = ''
-        self.worker = None
 
     def try_connect(self):
-        'Try to establish a connection with the other node'
+        """Try to establish a connection with another node"""
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             s.connect((self.addr, 7776))
@@ -46,33 +45,29 @@ class Peer(threading.Thread):
             pass
 
     def recv_connect(self, stream):
-        'A connection has been established'
-        print 'recv_connect called'
-        if self.stream is not None:
+        """A connection has been established"""
+        if type(self.stream) is socket.socket:
             self.quit()
-        print 'working...'
 
         self.stream = stream
         self.do_handshake()
-        print 'still working...'
 
         self.status = 1
         self.start()
-        print 'yup'
 
     def do_handshake(self):
-        'Sends a handshake packet'
+        """Sends a handshake packet"""
         data = {
             'alias': self.master.node['alias'],
             'status': self.master.node['status'],
-            'status-message': self.master.node['status-message']
+            'statusmsg': self.master.node['statusmsg']
         }
 
         self.send_packet(data)
 
     def send_packet(self, data):
-        'Pack and send a packet'
-        if self.stream is None:
+        """Pack and send a packet"""
+        if type(self.stream) is not socket.socket:
             return False
 
         data['timestamp'] = int(time.time())
@@ -80,44 +75,32 @@ class Peer(threading.Thread):
         packed = self.encode_length(json.dumps(data, separators=(',', ':')))
 
         self.stream.send(packed)
-        print 'sent: %s' % packed
 
     def run(self):
-        'Receive packets, parse them, and send them off for interpretation'
-        print 'recv_packet called'
+        """The threaded part of the peer"""
         while self.status:
             try:
-                print 'waiting to receive packets!'
                 packets = self.decode_length(self.stream.recv(4096))
-                print 'received: %s' % repr(packets)
-            except Exception, e:
-                print e
-                packets = []
 
-            if not packets:
-                print 'NO PACKETS!'
+            except socket.error:
                 self.quit()
-                return
-
-            print 'received valid packets!'
+                break
 
             for raw in packets:
                 try:
-                    data = json.loads(raw)
-                    print 'received: %s' % str(data)
-                    self.parse_packet(data)
+                    self.parse_packet(json.loads(raw))
 
-                except Exception:
+                except ValueError:
                     continue
 
     def parse_packet(self, data):
-        'Parse the contents of a packet'
-        if not data.get('timestamp'):
+        """Parse the JSON contents of a packet"""
+        if data.get('timestamp') is None or type(data['timestamp']) is not int:
             data['timestamp'] = int(time.time())
 
         alias = data.get('alias')
-        if alias is not None and not self.name:
-            self.name = alias
+        if alias is not None and not self.alias:
+            self.alias = alias
 
         status = data.get('status')
         if status is not None and status == 0:
@@ -125,42 +108,48 @@ class Peer(threading.Thread):
         elif status and 0 < status < 4:
             self.status = status
 
-        status_message = data.get('status-message')
-        if status_message:
-            self.status_message = status_message
+        statusmsg = data.get('statusmsg')
+        if statusmsg:
+            self.statusmsg = statusmsg
 
         message = data.get('message')
         if message:
-            self.log.append((data['timestamp'], self.name, message))
+            self.log.append((data['timestamp'], self.alias, message))
 
     def encode_length(self, data):
-        'Encode a 4 byte length prefix'
+        """Encode a 4 byte length prefix in network byte order"""
         length = struct.pack('!I', len(data))
         return '{0}{1}'.format(length, data)
 
     def decode_length(self, data):
-        'Split a chunk of received data into packets based on the 4 byte prefix'
+        """Split a stream of received data into packets based on the length prefix"""
         packets = []
         data = '{0}{1}'.format(self._buffer, data)
         while data:
             try:
                 length = struct.unpack('!I', data[:4])[0]
-                packets.append(data[4:length + 4])
-                data = data[:length + 4]
+                packet = data[4:length + 4]
+                if len(packet) != length:
+                    self._buffer = data
+                    break
 
-            except Exception:
-                self._buffer = data
+                packets.append(packet)
+                data = data[length + 4:]
+
+            except struct.error:
+                break
 
         return packets
 
     def quit(self):
-        'Goodbye for now!'
-        print 'quit called!'
-        if self.stream:
+        if type(self.stream) is socket.socket:
             self.status = 0
-            self.stream.shutdown(socket.SHUT_RDWR)
+            try:
+                self.stream.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                pass
             self.stream.close()
-            self.worker.join()
+            self.join()
             self.stream = None
 
     def send_message(self, message):

@@ -20,7 +20,7 @@ class Peer(threading.Thread):
     def from_addr(cls, manager, addr, log=[]):
         """Creates a peer from an address and tries to connect"""
         o = cls(manager, addr)
-        o.try_connect()
+        thread.start_new_thread(o.try_connect)
         return o
 
     def __init__(self, manager, addr, log=[]):
@@ -152,7 +152,6 @@ class Peer(threading.Thread):
             except socket.error:
                 pass
             self.stream.close()
-            self.join()
             self.stream = None
 
     def send_message(self, message):

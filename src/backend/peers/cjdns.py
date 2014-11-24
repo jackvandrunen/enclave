@@ -1,6 +1,7 @@
 import json
 import socket
 import threading
+import thread
 import time
 import struct
 
@@ -9,28 +10,27 @@ class Peer(threading.Thread):
     """Manages a connection with another node"""
 
     @classmethod
-    def from_socket(cls, master, addr, stream, log=[]):
-        o = cls(master, addr)
+    def from_socket(cls, manager, addr, stream, log=[]):
+        o = cls(manager, addr)
         o.recv_connect(stream)
         return o
 
     @classmethod
-    def from_addr(cls, master, addr, log=[]):
-        o = cls(master, addr)
+    def from_addr(cls, manager, addr, log=[]):
+        o = cls(manager, addr)
         o.try_connect()
         return o
 
-    def __init__(self, master, addr, log=[]):
+    def __init__(self, manager, addr, log=[]):
         super(Peer, self).__init__()
 
-        self.master = master
+        self.manager = manager
         self.addr = addr
         self.alias = addr
         self.status = 0
         self.statusmsg = ''
 
         self.stream = None
-        self.log = log
         self._buffer = ''
 
     def try_connect(self):
@@ -58,9 +58,9 @@ class Peer(threading.Thread):
     def do_handshake(self):
         """Sends a handshake packet"""
         data = {
-            'alias': self.master.node['alias'],
-            'status': self.master.node['status'],
-            'statusmsg': self.master.node['statusmsg']
+            'alias': self.manager.node['alias'],
+            'status': self.manager.node['status'],
+            'statusmsg': self.manager.node['statusmsg']
         }
 
         self.send_packet(data)
@@ -74,7 +74,7 @@ class Peer(threading.Thread):
 
         packed = self.encode_length(json.dumps(data, separators=(',', ':')))
 
-        self.stream.send(packed)
+        thread.start_new_thread(self.stream.send, (packed,))
 
     def run(self):
         """The threaded part of the peer"""
@@ -114,7 +114,7 @@ class Peer(threading.Thread):
 
         message = data.get('message')
         if message:
-            self.log.append((data['timestamp'], self.alias, message))
+            self.manager.recv_message(self.addr, data['timestamp'], self.alias, message)
 
     def encode_length(self, data):
         """Encode a 4 byte length prefix in network byte order"""
@@ -142,6 +142,7 @@ class Peer(threading.Thread):
         return packets
 
     def quit(self):
+        """Close the socket and quit"""
         if type(self.stream) is socket.socket:
             self.status = 0
             try:
@@ -153,5 +154,5 @@ class Peer(threading.Thread):
             self.stream = None
 
     def send_message(self, message):
+        """Send a text message to peer"""
         self.send_packet({'message': message})
-        self.log.append((time.time(), self.master.node['alias'], message))

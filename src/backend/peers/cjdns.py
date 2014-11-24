@@ -11,12 +11,14 @@ class Peer(threading.Thread):
 
     @classmethod
     def from_socket(cls, manager, addr, stream, log=[]):
+        """Creates a peer from a socket"""
         o = cls(manager, addr)
         o.recv_connect(stream)
         return o
 
     @classmethod
     def from_addr(cls, manager, addr, log=[]):
+        """Creates a peer from an address and tries to connect"""
         o = cls(manager, addr)
         o.try_connect()
         return o

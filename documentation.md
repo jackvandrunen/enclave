@@ -68,6 +68,6 @@ When two clients connect, they both should send a single packet. This packet sho
 
 ## **The Backend and the Frontend**
 
-Pending.
+The backend and frontend communicate with two one-way FIFO queues.
 
 ---

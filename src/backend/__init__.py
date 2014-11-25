@@ -18,9 +18,9 @@ b2fq = Queue.Queue()
 master = None
 
 
-def start(friends, enemies, alias, status=1, statusmsg=''):
+def start(friends, enemies, alias, status=1, statusmsg='', protocol='cjdns'):
     """Start the backend"""
     global master
-    master = Manager(f2bq, b2fq, friends, enemies, alias, status, statusmsg)
+    master = Manager(f2bq, b2fq, friends, enemies, alias, status, statusmsg, protocol)
     master.start()
     return f2bq, b2fq

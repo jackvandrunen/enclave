@@ -1,99 +1,99 @@
-# -*- coding: utf-8 -*-
-
-import netifaces
 import threading
 
-from peer import Peer
-from server import Server
+
+Server = None
+Peer = None
 
 
 class Manager(threading.Thread):
-    'Manages everything in the backend'
+    """Manages everything in the backend"""
 
-    status_messages = {'available': 1, 'online': 1, 'idle': 2, 'away': 2,
-                       'busy': 3}
-
-    def __init__(self, friends, enemies, alias, status=1, statusmsg=''):
+    def __init__(self, f2bq, b2fq, friends, enemies, alias, status=1, statusmsg='', protocol='cjdns'):
         super(Manager, self).__init__()
 
-        self.friends = friends
-        self.enemies = set(enemies)
+        self.f2bq = f2bq  # For receiving
+        self.b2fq = b2fq  # For sending
 
-        self.address = self.get_address()
+        self.friends = friends  # list of addresses
+        self.enemies = enemies
+
+        self.alias = alias
+        self.status= status
+        self.statusmsg = statusmsg
+
+        self.choose_classes(protocol)
+
+        self.peers = {}  # dict of {address: peer object}
         self.server = Server(self)
 
-        self.node = {}
-        self.peers = {}
-        self.update_node(alias, status, statusmsg)
+        self.queued_connections = {}  # {address: peer}
+
+    @staticmethod
+    def choose_classes(protocol):
+        """Generates a server and peer class for the protocol desired"""
+        if protocol == 'cjdns':
+            global Server, Peer
+            import servers.cjdns
+            import peers.cjdns
+            Server = servers.cjdns.Server
+            Peer = peers.cjdns.Peer
 
     def run(self):
-        'Called when the thread is started'
+        """Called when the thread is started"""
         self.try_peers()
         self.server.start()
 
-    @staticmethod
-    def get_address():
-        'Returns the address that we care about, or None'
-        ifaces = [i for i in netifaces.interfaces() if i.startswith('tun')]
-        addrs = []
-        for i in ifaces:
-            addrs += netifaces.ifaddresses(i)[netifaces.AF_INET6]
-        cjdaddrs = [i['addr'] for i in addrs if i['addr'].startswith('fc')]
-        if cjdaddrs:
-            return cjdaddrs[0]
-
-    def update_node(self, alias=None, status=None, statusmsg=None):
-        "Update this node's information"
-        if alias is not None:
-            self.node['alias'] = alias
-
-        if status is not None:
-            if type(status) is int:
-                self.node['status'] = status
-
-            else:
-                try:
-                    self.node['status'] = self.status_messages[status.lower()]
-                except Exception:
-                    pass
-
-        if statusmsg is not None:
-            self.node['status-message'] = statusmsg
-
-        self.update_information(**self.node)
+        while self.status:
+            self.execute(self.f2bq.get())  # Receive directives from the frontend
 
     def try_peers(self):
-        'Attempt to connect to all friends'
-        self.peers = {}
-        for addr, name in self.friends.items():
-            self.peers[addr] = Peer.from_addr(self, addr, name)
+        """Try to connect to each peer, and populate the list of peers"""
+        for addr in self.friends:
+            if addr in self.peers and not self.peers[addr].status:
+                self.peers[addr].try_connect()
+            elif addr not in self.peers:
+                self.peers[addr] = Peer.from_addr(self, addr)
 
-    def new_connection(self, addr, sock):
-        print 'connection from %s' % addr
-        if addr in self.enemies:
-            return
+    def execute(self, directive):
+        """Execute the directive that the frontend sent"""
+        if directive['type'] == 'friend-response':
+            if directive['accept']:
+                self.friends.append(directive['addr'])
+                self.peers[directive['addr']] = self.queued_connections[directive['addr']]
+                del self.queued_connections[directive['addr']]
 
-        elif addr in self.peers:
-            self.peers[addr].recv_connect(sock)
+    def new_connection(self, addr, stream):
+        """A new inbound connection is passed in from the server"""
+        if addr in self.friends:
+            if addr in self.peers:
+                self.peers[addr].recv_connect(stream)
+            else:
+                self.peers[addr] = Peer.from_socket(self, addr, stream)
 
         else:
-            self.peers[addr] = Peer.from_socket(self, addr, sock)
+            self.queued_connections[addr] = Peer.from_socket(self, addr, stream)
+            self.send_to_frontend({
+                'type': 'friend-request',
+                'peer': self.queued_connections[addr]
+            })
 
-    def add_friend(self, addr, name):
-        if addr in self.enemies:
-            self.enemies.remove(addr)
+    def recv_message(self, addr, timestamp, alias, message):
+        """Receive a message and pass it on to the frontend"""
+        self.send_to_frontend({
+            'type': 'message',
+            'addr': addr,
+            'timestamp': timestamp,
+            'alias': alias,
+            'message': message
+        })
 
-        if addr not in self.friends:
-            self.friends[addr] = name
-
-            if addr not in self.peers:
-                self.peers[addr] = Peer.from_addr(self, addr, name)
-
-        return name, self.peers[addr]
-
-    def update_information(self, **kwargs):
-        for peer in self.peers.values():
-            peer.send_packet(kwargs)
+    def send_to_frontend(self, message):
+        """Send a message (should be dict) to the frontend"""
+        self.b2fq.put(message)
 
     def quit(self):
-        self.update_node(status=0)
+        """Exit the backend"""
+        self.status = 0
+        self.server.stop()
+        for peer in self.peers.values():
+            peer.quit()

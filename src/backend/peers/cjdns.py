@@ -10,20 +10,20 @@ class Peer(threading.Thread):
     """Manages a connection with another node"""
 
     @classmethod
-    def from_socket(cls, manager, addr, stream, log=[]):
+    def from_socket(cls, manager, addr, stream):
         """Creates a peer from a socket"""
         o = cls(manager, addr)
         o.recv_connect(stream)
         return o
 
     @classmethod
-    def from_addr(cls, manager, addr, log=[]):
+    def from_addr(cls, manager, addr):
         """Creates a peer from an address and tries to connect"""
         o = cls(manager, addr)
         thread.start_new_thread(o.try_connect)
         return o
 
-    def __init__(self, manager, addr, log=[]):
+    def __init__(self, manager, addr):
         super(Peer, self).__init__()
 
         self.manager = manager
@@ -60,9 +60,9 @@ class Peer(threading.Thread):
     def do_handshake(self):
         """Sends a handshake packet"""
         data = {
-            'alias': self.manager.node['alias'],
-            'status': self.manager.node['status'],
-            'statusmsg': self.manager.node['statusmsg']
+            'alias': self.manager.alias,
+            'status': self.manager.status,
+            'statusmsg': self.manager.statusmsg
         }
 
         self.send_packet(data)

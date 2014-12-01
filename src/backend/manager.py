@@ -1,5 +1,7 @@
 import threading
 
+import executor
+
 
 Server = None
 Peer = None
@@ -44,7 +46,7 @@ class Manager(threading.Thread):
         self.server.start()
 
         while self.status:
-            self.execute(self.f2bq.get())  # Receive directives from the frontend
+            executor.execute(self, self.f2bq.get())  # Receive directives from the frontend
 
     def try_peers(self):
         """Try to connect to each peer, and populate the list of peers"""
@@ -53,14 +55,6 @@ class Manager(threading.Thread):
                 self.peers[addr].try_connect()
             elif addr not in self.peers:
                 self.peers[addr] = Peer.from_addr(self, addr)
-
-    def execute(self, directive):
-        """Execute the directive that the frontend sent"""
-        if directive['type'] == 'friend-response':
-            if directive['accept']:
-                self.friends.append(directive['addr'])
-                self.peers[directive['addr']] = self.queued_connections[directive['addr']]
-                del self.queued_connections[directive['addr']]
 
     def new_connection(self, addr, stream):
         """A new inbound connection is passed in from the server"""

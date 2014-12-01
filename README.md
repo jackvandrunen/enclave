@@ -13,3 +13,11 @@ Enclave is not designed for use over just any network, however. It is designed p
 Other networking protocols and overlay protocols which have built in privacy and authentication mechanisms, and static addressing systems are suitable for use as well. People who are interested in writing the peer/server system for other protocols are welcome to contribute. Enclave is designed to be as network agnostic as possible.
 
 ---
+
+#### Switching to a Web-Based Frontend
+
+The original prototype of Enclave used a frontend made with wxPython. However, due to the flexibility that HTML5 and JavaScript offers, I have decided to switch to a web-based frontend.
+
+The frontend communicates with the backend using a WSGI server running the Bottle microframework, and a combination of Ajax and HTML5 SSE for streaming. I chose not to use websockets because SSE is fun, and integrates directly into the web server using my custom library, Stream420.
+
+---

@@ -39,11 +39,14 @@ q.put({'hello_message': 'Hello, World!'})  # Will be sent once and only once:
 """
 
 
-from bottle import get, post, request, response
+from bottle import get, post, request, response, default_app
 import json
 import contextlib
 import sys
 import threading
+
+from wsgiref.simple_server import WSGIServer, make_server
+from SocketServer import ThreadingMixIn
 
 
 @contextlib.contextmanager
@@ -124,21 +127,20 @@ def stream(path, callback, queue):
     return get(path)(_ostream(queue)), post(path)(_istream(callback))
 
 
+class ThreadingWSGIServer(WSGIServer, ThreadingMixIn):
+    """Because threading"""
+
+
 class launch(threading.Thread):
     """A launcher for launching WSGI compatible servers on separate threads"""
 
-    def __init__(self, server, app, *args, **kwargs):
+    def __init__(self, server=ThreadingWSGIServer, app=default_app(), host='localhost', port=8080):
         threading.Thread.__init__(self)
-
-        self.server = server
-        self.app = app
-        self.args = args
-        self.kwargs = kwargs
-
+        self.server = make_server(host, port, app, server)
         self.start()
 
     def run(self):
-        self.server(self.app, *self.args, **self.kwargs)
+        self.server.serve_forever()
 
     def stop(self):
         self.server.shutdown()

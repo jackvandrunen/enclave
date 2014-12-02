@@ -1,7 +1,5 @@
 from stream420 import stream, launch
-from wsgistuff import run
-
-from bottle import route, static_file, error, default_app
+from bottle import route, static_file, error
 
 
 @route('/')
@@ -23,4 +21,4 @@ def errormsg(err):
 
 def start(f2bq, b2fq, host='localhost', port=7775):
     out_stream, in_stream = stream('/stream', f2bq.put, b2fq)
-    return launch(run, default_app(), host=host, port=port)
+    return launch(host=host, port=port)

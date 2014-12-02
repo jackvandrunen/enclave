@@ -61,6 +61,22 @@ def _silence():
     sys.stdout = savestdout
 
 
+class Streamer(object):
+
+    def __init__(self, queue):
+        self.queue = queue
+
+    def start(self):
+        self.running = True
+        while self.running:
+            if not self.queue.empty():
+                yield '\n'
+                yield 'data: %s\n\n' % json.dumps(self.queue.get())
+
+    def stop(self):
+        self.running = False
+
+
 class _istream(object):
 
     def __init__(self, callback):
@@ -82,14 +98,15 @@ class _ostream(object):
 
     def __init__(self, queue):
         self.queue = queue
+        self.old = None
 
     def __call__(self):
         response.set_header('Content-Type', 'text/event-stream')
         response.set_header('Cache-Control', 'no-cache')
-        while True:
-            if not self.queue.empty():
-                yield '\n'
-                yield 'data: %s\n\n' % json.dumps(self.queue.get())
+        if self.old is not None:
+            self.old.stop()
+        self.old = Streamer(self.queue)
+        return self.old.start()
 
 
 def istream(path, callback):

@@ -122,3 +122,6 @@ class launch(threading.Thread):
 
     def run(self):
         self.server(self.app, *self.args, **self.kwargs)
+
+    def stop(self):
+        self.server.shutdown()

@@ -10,8 +10,10 @@ Peer = None
 class Manager(threading.Thread):
     """Manages everything in the backend"""
 
-    def __init__(self, f2bq, b2fq, friends, enemies, alias, status=1, statusmsg='', protocol='cjdns'):
+    def __init__(self, parent, f2bq, b2fq, friends, enemies, alias, status=1, statusmsg='', protocol='cjdns'):
         super(Manager, self).__init__()
+
+        self.parent = parent
 
         self.f2bq = f2bq  # For receiving
         self.b2fq = b2fq  # For sending

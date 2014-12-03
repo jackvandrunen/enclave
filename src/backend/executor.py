@@ -10,3 +10,6 @@ def execute(self, directive):
             self.friends.append(directive['addr'])
             self.peers[directive['addr']] = self.queued_connections[directive['addr']]
             del self.queued_connections[directive['addr']]
+
+    if directive['type'] == 'quit':
+        self.parent.quit()

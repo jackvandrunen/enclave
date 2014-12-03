@@ -4,6 +4,7 @@ import threading
 import thread
 import time
 import struct
+import Queue
 
 
 class Peer(threading.Thread):
@@ -34,6 +35,8 @@ class Peer(threading.Thread):
 
         self.stream = None
         self._buffer = ''
+
+        self.send_queue = Queue.LifoQueue()
 
     def try_connect(self):
         """Try to establish a connection with another node"""
@@ -69,14 +72,21 @@ class Peer(threading.Thread):
 
     def send_packet(self, data):
         """Pack and send a packet"""
-        if type(self.stream) is not socket.socket:
-            return False
-
         data['timestamp'] = int(time.time())
 
         packed = self.encode_length(json.dumps(data, separators=(',', ':')))
 
-        thread.start_new_thread(self.stream.send, (packed,))
+        self.send_queue.put(packed)
+        thread.start_new_thread(self.flush_queue)
+
+    def flush_queue(self):
+        """Send all packets that have been waiting to be sent"""
+        try:
+            while not self.send_queue.empty() and type(self.stream) is socket.socket:
+                self.stream.send(self.send_queue.get())
+
+        except socket.error:
+            self.quit()
 
     def run(self):
         """The threaded part of the peer"""

@@ -36,7 +36,7 @@ class Peer(threading.Thread):
         self.stream = None
         self._buffer = ''
 
-        self.send_queue = Queue.LifoQueue()
+        self.send_queue = Queue.Queue()
 
     def try_connect(self):
         """Try to establish a connection with another node"""
@@ -65,10 +65,13 @@ class Peer(threading.Thread):
         data = {
             'alias': self.manager.alias,
             'status': self.manager.status,
-            'statusmsg': self.manager.statusmsg
+            'statusmsg': self.manager.statusmsg,
+            'timestamp': int(time.time())
         }
+        packed = self.encode_length(json.dumps(data, separators=(',', ':')))
+        self.stream.send(data)
 
-        self.send_packet(data)
+        thread.start_new_thread(self.flush_queue)
 
     def send_packet(self, data):
         """Pack and send a packet"""
